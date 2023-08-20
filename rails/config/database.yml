@@ -1,9 +1,9 @@
 default: &default
   adapter: postgresql
   encoding: unicode
-  host: db
+  host: db_aws
   username: postgres
-  password: password
+  password: aws_password
   pool: 5
 
 development:
