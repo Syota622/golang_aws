@@ -1,6 +1,6 @@
 # module call
-module "network" {
-  source = "../../module/network"
+module "shared" {
+  source = "../../module/shared"
   pj     = local.pj
   env    = local.env
 }
