@@ -1,6 +1,0 @@
-#!/bin/bash
-
-for file in `find . -name '*.html.erb'`; do
-  echo $file
-  htmlbeautifier $file
-done

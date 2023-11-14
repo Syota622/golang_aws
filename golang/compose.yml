@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: .
+      target: development
+    volumes: # 現在のディレクトリ、名前付きボリュームをマウント
+      - .:/app
+      - go_mod:/go/pkg/mod
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:                     # この環境変数セクションを追加
+      DBUSER: user                   # データベースユーザー名
+      DBPASS: password               # データベースパスワード
+  db:
+    image: mysql:8.0
+    restart: always                  # コンテナが停止したときに自動的に再起動
+    environment:                     # データベース名、ユーザー名、パスワード、そしてルートユーザーのパスワードを設定
+      MYSQL_DATABASE: 'myapp'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    command: --default-authentication-plugin=caching_sha2_password # MySQL8.0からのデフォルト認証プラグインを指定
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d  
+volumes:
+  db_data:
+  go_mod:
+
+# docker-entrypoint-initdb.d：
+# ローカルの sql ディレクトリ（SQLスクリプトが含まれている場所）をコンテナの /docker-entrypoint-initdb.d にマウント。
+# MySQLはこのディレクトリにある .sql ファイルを自動的に実行して、データベースの初期設定を行います
