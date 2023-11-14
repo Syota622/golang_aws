@@ -176,6 +176,17 @@ func main() {
 
 	// ルーターの作成
 	router := gin.Default()
+
+	// 静的ファイルのディレクトリを設定
+	router.LoadHTMLGlob("views/*")
+	router.Static("/assets", "./assets") // 任意の静的ファイル用
+
+	// ルートURLをindex.htmlにリダイレクト
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
+
+	// APIのルーティング
 	router.GET("/albums", getAlbums)              // アルバム一覧を取得する
 	router.GET("/albums/:id", getAlbumByID)       // アルバムを取得する
 	router.POST("/albums", postAlbums)            // アルバムを追加する
