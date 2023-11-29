@@ -1,23 +1,3 @@
-# web-service-gin
-ginとmysqlを使った簡単なwebアプリケーションです。
-
-## mysql
-ホストでport 3306で起動してください。
-
-## 環境変数
-mysqlを使用するために以下の環境変数を設定してください
-- DBUSER
-- DBPASS
-
-## database
-- myappでdatabaseを作成してください。
-- sqlディレクトリ以下にテーブル作成とseedデータ作成のsqlファイルを作成しているので実行してください
-
-## docker
-docker化はしていないため、dockerを使用する場合は適宜コードを書き換えてください。
-
-# 環境構築方法
-
 # docker compose
 docker compose build
 docker compose up
@@ -126,3 +106,24 @@ curl -X DELETE http://localhost:8080/albums/5
     "message": {}
 }
 ```
+
+# ECR Push
+## ECRリポジトリへログイン
+aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com
+
+## build：ECRリポジトリへイメージをpush
+docker build -t ecr-test .
+
+## イメージをタグ付け
+docker tag ecr-test:latest 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/ecr-test:latest
+
+## イメージをpush
+docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/ecr-test:latest
+
+## ECRのリポジトリを確認
+aws ecr list-images --repository-name ecr-test
+
+## ECRのリポジトリの更新
+docker build -t ecr-test .
+docker tag ecr-test:latest 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/ecr-test:latest
+docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/ecr-test:latest

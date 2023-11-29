@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
@@ -150,43 +149,19 @@ func main() {
 	}
 
 	var err error
-	for i := 0; i < 5; i++ { // 最大5回リトライ
-
-		// データベースに接続
-		db, err = sql.Open("mysql", config.FormatDSN())
-		if err != nil {
-			log.Println("データベースを開くのに失敗しました:", err)
-			time.Sleep(5 * time.Second) // 5秒待機
-			continue
-		}
-
-		// データベースにpingを送信して接続を確認
-		err = db.Ping()
-		if err == nil {
-			break // 接続成功
-		}
-
-		log.Println("データベースへの接続に失敗しました。再試行します...")
-		time.Sleep(5 * time.Second) // 再試行の前に5秒待機
-	}
+	db, err = sql.Open("mysql", config.FormatDSN())
 	if err != nil {
-		log.Fatal("データベースへの接続に最終的に失敗しました:", err)
+		log.Fatal(err)
+	}
+
+	pingErr := db.Ping()
+	if pingErr != nil {
+		log.Fatal(pingErr)
 	}
 	fmt.Println("データベースに接続しました。")
 
 	// ルーターの作成
 	router := gin.Default()
-
-	// 静的ファイルのディレクトリを設定
-	router.LoadHTMLGlob("views/*")
-	router.Static("/assets", "./assets") // 任意の静的ファイル用
-
-	// ルートURLをindex.htmlにリダイレクト
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", nil)
-	})
-
-	// APIのルーティング
 	router.GET("/albums", getAlbums)              // アルバム一覧を取得する
 	router.GET("/albums/:id", getAlbumByID)       // アルバムを取得する
 	router.POST("/albums", postAlbums)            // アルバムを追加する
