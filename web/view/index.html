@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>アルバムリスト</title>
+    <!-- BootstrapのCSSを追加 -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">アルバムリスト</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>タイトル</th>
+                    <th>アーティスト</th>
+                    <th>価格</th>
+                </tr>
+            </thead>
+            <tbody id="albums"></tbody>
+        </table>
+    </div>
+
+    <script>
+        function getApiBaseUrl() {
+            if (window.location.hostname === 'mokokero.com') {
+                return 'https://www.mokokero.com'; // 本番環境のAPIベースURL
+            } else {
+                return 'http://localhost:8081'; // ローカル環境のAPIベースURL
+            }
+        }
+        fetch(`${getApiBaseUrl()}/albums`)
+            .then(response => response.json())
+            .then(albums => {
+                const albumsTable = document.getElementById('albums');
+                albums.forEach(album => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${album.id}</td>
+                        <td>${album.title}</td>
+                        <td>${album.artist}</td>
+                        <td>${album.price}</td>
+                    `;
+                    albumsTable.appendChild(row);
+                });
+            });
+    </script>
+</body>
+</html>
