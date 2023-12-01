@@ -1,14 +1,3 @@
-# docker compose
-## コンテナ、ネットワーク作成
-docker compose build
-docker compose up
-
-## コンテナ、ネットワーク削除
-docker-compose down
-
-## コンテナ、ネットワーク、ボリューム削除
-docker-compose down -v
-
 # curl
 ## アルバムのリストを取得
 curl http://localhost:8080/albums
@@ -113,6 +102,17 @@ curl -X DELETE http://localhost:8080/albums/5
     "message": {}
 }
 ```
+
+# docker compose
+## コンテナ、ネットワーク作成
+docker compose build
+docker compose up
+
+## コンテナ、ネットワーク削除
+docker-compose down
+
+## コンテナ、ネットワーク、ボリューム削除
+docker-compose down -v
 
 # ECR Push
 ## ECRリポジトリへログイン

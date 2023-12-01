@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -13,133 +12,8 @@ import (
 
 var db *sql.DB
 
-// アルバムの構造体
-type Album struct {
-	ID     int64   `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
-}
-
-// アルバム一覧を取得する
-func getAlbums(c *gin.Context) {
-	var albums []Album
-
-	rows, err := db.Query("SELECT * FROM album")
-
-	if err != nil {
-		return
-	}
-
-	defer rows.Close()
-
-	for rows.Next() {
-		var album Album
-		if err := rows.Scan(&album.ID, &album.Title, &album.Artist, &album.Price); err != nil {
-			c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err})
-			return
-		}
-		albums = append(albums, album)
-		if err := rows.Err(); err != nil {
-			c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err})
-			return
-		}
-	}
-	c.IndentedJSON(http.StatusOK, albums)
-}
-
-// アルバムを追加する
-func postAlbums(c *gin.Context) {
-	var newAlbum Album
-
-	err := c.BindJSON(&newAlbum)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": err})
-		return
-	}
-
-	result, err := db.Exec("INSERT INTO album (title, artist, price) VALUES (?, ?, ?)", newAlbum.Title, newAlbum.Artist, newAlbum.Price)
-	if err != nil {
-		c.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": err})
-		return
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		c.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": err})
-		return
-	}
-
-	var createdAlbum Album
-	createdAlbum.ID = id
-	createdAlbum.Artist = newAlbum.Artist
-	createdAlbum.Price = newAlbum.Price
-	createdAlbum.Title = newAlbum.Title
-	c.IndentedJSON(http.StatusCreated, &createdAlbum)
-}
-
-// アルバムを取得する
-func getAlbumByID(c *gin.Context) {
-	id := c.Param("id")
-
-	var album Album
-
-	row := db.QueryRow("SELECT * FROM album WHERE id = ?", id)
-	if err := row.Scan(&album.ID, &album.Title, &album.Artist, &album.Price); err != nil {
-		if err == sql.ErrNoRows {
-			c.IndentedJSON(http.StatusNotFound, gin.H{"message": err})
-			return
-		}
-	}
-	c.IndentedJSON(http.StatusOK, &album)
-}
-
-// アルバムを更新する
-func updateAlbumByID(c *gin.Context) {
-	var updateAlbum Album
-
-	id := c.Param("id")
-
-	if err := c.BindJSON(&updateAlbum); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "bind error"})
-		return
-	}
-
-	_, err := db.Exec("UPDATE album SET title = ?, artist = ?, price = ? WHERE id = ?", updateAlbum.Title, updateAlbum.Artist, updateAlbum.Price, id)
-	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "update error"})
-		return
-	}
-
-	c.IndentedJSON(http.StatusNoContent, &updateAlbum)
-}
-
-// アルバムを削除する
-func deleteAlbumByID(c *gin.Context) {
-	id := c.Param("id")
-
-	var album Album
-
-	row := db.QueryRow("SELECT * FROM album WHERE id = ?", id)
-	if err := row.Scan(&album.ID, &album.Title, &album.Artist, &album.Price); err != nil {
-		if err == sql.ErrNoRows {
-			c.IndentedJSON(http.StatusNotFound, gin.H{"message": err})
-			return
-		}
-	}
-
-	if _, err := db.Exec("DELETE FROM album WHERE id = ?", id); err != nil {
-		c.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"message": err})
-		return
-	}
-
-	c.IndentedJSON(http.StatusNoContent, &album)
-}
-
-// mainを実行する
 func main() {
-	// データベースに接続する
+	// データベース接続の設定
 	config := mysql.Config{
 		User:                 os.Getenv("DBUSER"),
 		Passwd:               os.Getenv("DBPASS"),
@@ -155,17 +29,40 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pingErr := db.Ping()
-	if pingErr != nil {
-		log.Fatal(pingErr)
+	if err := db.Ping(); err != nil {
+		log.Fatal(err)
 	}
 	fmt.Println("データベースに接続しました。")
 
-	// ルーターの作成
+	// ルーターの設定
 	router := gin.Default()
+	setupRouter(router)
 
-	// CORSミドルウェアの設定
-	router.Use(func(c *gin.Context) {
+	// サーバーの起動
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	router.Run(":" + port)
+}
+
+func setupRouter(router *gin.Engine) {
+	// CORS設定
+	router.Use(corsMiddleware())
+
+	// 静的ファイルのルートを設定
+	router.Static("/static", "./view")
+
+	// ルートの設定
+	router.GET("/albums", getAlbums)
+	router.GET("/albums/:id", getAlbumByID)
+	router.POST("/albums", postAlbums)
+	router.PATCH("/albums/:id", updateAlbumByID)
+	router.DELETE("/albums/:id", deleteAlbumByID)
+}
+
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		// 環境変数からCORS許可オリジンを取得
 		corsAllowedOrigin := os.Getenv("CORS_ALLOWED_ORIGIN")
 		if corsAllowedOrigin == "" {
@@ -178,22 +75,7 @@ func main() {
 			c.AbortWithStatus(204)
 			return
 		}
+		// 他のミドルウェアやルーターハンドラの呼び出しを続行
 		c.Next()
-	})
-
-	// 静的ファイルのルートを設定（'../frontend'は静的ファイルが置かれているディレクトリ）
-	router.Static("/static", "./view")
-
-	router.GET("/albums", getAlbums)              // アルバム一覧を取得する
-	router.GET("/albums/:id", getAlbumByID)       // アルバムを取得する
-	router.POST("/albums", postAlbums)            // アルバムを追加する
-	router.PATCH("/albums/:id", updateAlbumByID)  // アルバムを更新する
-	router.DELETE("/albums/:id", deleteAlbumByID) // アルバムを削除する
-
-	// サーバーの起動
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080" // デフォルトポート
 	}
-	router.Run(":" + port)
 }
