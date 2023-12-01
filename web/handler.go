@@ -13,6 +13,8 @@ import (
 func getAlbums(c *gin.Context) {
 	var albums []Album
 
+	// db.Query()を使って、データベースからデータを取得します。
+	// rowsは、データベースから取得した行の集まりです。errは、エラーを格納します。
 	rows, err := db.Query("SELECT * FROM album")
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()}) // c.IndentedJSONは、Ginのメソッドです。
@@ -31,11 +33,13 @@ func getAlbums(c *gin.Context) {
 		}
 		albums = append(albums, alb)
 	}
+	// rows.Err()は、rows.Next()のループが終了した後に呼び出されます。
 	if err := rows.Err(); err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
+	// 取得したアルバムの一覧をJSONとして返します。
 	c.IndentedJSON(http.StatusOK, albums)
 }
 
