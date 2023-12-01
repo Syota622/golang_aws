@@ -7,14 +7,14 @@
 
 ### ネットワーク類 ###
 module "network" {
-  source             = "../rails_network"
+  source             = "../network"
   pj                 = var.pj
   env                = var.env
 }
 
-### ランディングページ ###
-module "landing_page" {
-  source             = "../landing_page"
-  pj                 = var.pj
-  env                = var.env
-}
+# ### ランディングページ ###
+# module "landing_page" {
+#   source             = "../landing_page"
+#   pj                 = var.pj
+#   env                = var.env
+# }
