@@ -15,13 +15,16 @@ func getAlbums(c *gin.Context) {
 
 	rows, err := db.Query("SELECT * FROM album")
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()}) // c.IndentedJSONは、Ginのメソッドです。
 		return
 	}
 	defer rows.Close()
 
+	// rows.Next()を使って、行を1つずつ取得します。
 	for rows.Next() {
 		var alb Album
+		// rwos.Scan()は、エラーハンドリングを行うために、毎回呼び出されます。
+		// alb変数に、行の値を格納します。（例：&alb.ID: IDカラムのデータをalb.IDに割り当てます。）
 		if err := rows.Scan(&alb.ID, &alb.Title, &alb.Artist, &alb.Price); err != nil {
 			c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return

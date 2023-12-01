@@ -24,6 +24,7 @@ func main() {
 	}
 
 	var err error
+
 	db, err = sql.Open("mysql", config.FormatDSN())
 	if err != nil {
 		log.Fatal(err)
