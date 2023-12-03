@@ -1,3 +1,40 @@
+# docker compose
+## コンテナ、ネットワーク作成
+docker compose build
+docker compose up
+
+## コンテナ、ネットワーク削除
+docker-compose down
+
+## コンテナ、ネットワーク、ボリューム削除
+docker-compose down -v
+
+# ECR Push
+## ECRリポジトリへログイン
+aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com
+
+## build：ECRリポジトリへイメージをpush
+docker build --target production -t 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest -f Dockerfile .
+
+# イメージをタグ付け
+docker tag 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:v1.0.0
+
+## イメージをpush
+docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:v1.0.0
+
+## ECRのリポジトリを確認
+aws ecr list-images --repository-name golang
+
+## ECRのリポジトリの更新
+- aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com
+- docker build --target production -t 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest -f Dockerfile .
+- docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest
+
+## 調査
+### コンテナに入る
+- docker exec -it d8a06c162faa /bin/sh
+- ls /app/view
+
 # curl
 ## アルバムのリストを取得
 curl http://localhost:8080/albums
@@ -102,40 +139,3 @@ curl -X DELETE http://localhost:8080/albums/5
     "message": {}
 }
 ```
-
-# docker compose
-## コンテナ、ネットワーク作成
-docker compose build
-docker compose up
-
-## コンテナ、ネットワーク削除
-docker-compose down
-
-## コンテナ、ネットワーク、ボリューム削除
-docker-compose down -v
-
-# ECR Push
-## ECRリポジトリへログイン
-aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com
-
-## build：ECRリポジトリへイメージをpush
-docker build --target production -t 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest -f Dockerfile .
-
-# イメージをタグ付け
-docker tag 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:v1.0.0
-
-## イメージをpush
-docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:v1.0.0
-
-## ECRのリポジトリを確認
-aws ecr list-images --repository-name golang
-
-## ECRのリポジトリの更新
-- aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com
-- docker build --target production -t 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest -f Dockerfile .
-- docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest
-
-## 調査
-### コンテナに入る
-- docker exec -it d8a06c162faa /bin/sh
-- ls /app/view
