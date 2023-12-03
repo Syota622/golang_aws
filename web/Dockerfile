@@ -24,6 +24,8 @@ FROM alpine:latest as production
 
 WORKDIR /root/
 
+# 実行ファイルと静的ファイルをコピー
 COPY --from=builder /app/main .
+COPY --from=builder /app/view /app/view
 
 CMD ["./main"]

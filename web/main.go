@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -14,12 +15,17 @@ var db *sql.DB
 
 func main() {
 	// データベース接続の設定
+	dbHost := os.Getenv("DBHOST") // RDSのエンドポイント
+	if dbHost == "" {
+		dbHost = "db:3306" // デフォルト値
+	}
+
 	config := mysql.Config{
 		User:                 os.Getenv("DBUSER"),
 		Passwd:               os.Getenv("DBPASS"),
 		Net:                  "tcp",
-		Addr:                 "db:3306",
-		DBName:               "myapp",
+		Addr:                 dbHost, // エンドポイントの使用
+		DBName:               os.Getenv("DBNAME"),
 		AllowNativePasswords: true,
 	}
 
@@ -39,6 +45,10 @@ func main() {
 	router := gin.Default()
 	setupRouter(router)
 
+	router.NoRoute(func(c *gin.Context) {
+		c.String(http.StatusNotFound, "The page you requested was not found")
+	})
+
 	// サーバーの起動
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -51,8 +61,20 @@ func setupRouter(router *gin.Engine) {
 	// CORS設定
 	router.Use(corsMiddleware())
 
-	// 静的ファイルのルートを設定
-	router.Static("/static", "./view")
+	// 環境変数を確認してルーティングを設定
+	if os.Getenv("ENVIRONMENT") == "production" {
+		// Fargateでの設定
+		router.Static("/static", "/app/view")
+		router.GET("/", func(c *gin.Context) {
+			c.File("/app/view/index.html")
+		})
+	} else {
+		// ローカルでの設定
+		router.Static("/static", "./view")
+		router.GET("/", func(c *gin.Context) {
+			c.File("./view/index.html")
+		})
+	}
 
 	// ルートの設定
 	router.GET("/albums", getAlbums)

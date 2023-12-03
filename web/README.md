@@ -119,18 +119,23 @@ docker-compose down -v
 aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com
 
 ## build：ECRリポジトリへイメージをpush
-docker build -t ecr-test .
+docker build --target production -t 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest -f Dockerfile .
 
-## イメージをタグ付け
-docker tag ecr-test:latest 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/ecr-test:latest
+# イメージをタグ付け
+docker tag 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:v1.0.0
 
 ## イメージをpush
-docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/ecr-test:latest
+docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:v1.0.0
 
 ## ECRのリポジトリを確認
-aws ecr list-images --repository-name ecr-test
+aws ecr list-images --repository-name golang
 
 ## ECRのリポジトリの更新
-docker build -t ecr-test .
-docker tag ecr-test:latest 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/ecr-test:latest
-docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/ecr-test:latest
+- aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com
+- docker build --target production -t 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest -f Dockerfile .
+- docker push 235484765172.dkr.ecr.ap-northeast-1.amazonaws.com/golang:latest
+
+## 調査
+### コンテナに入る
+- docker exec -it d8a06c162faa /bin/sh
+- ls /app/view

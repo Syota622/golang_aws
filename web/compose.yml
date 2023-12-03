@@ -14,6 +14,7 @@ services:
     environment:                     # この環境変数セクションを追加
       DBUSER: user                   # データベースユーザー名
       DBPASS: password               # データベースパスワード
+      DBNAME: myapp                  # データベースパスワード
   db:
     image: mysql:8.0
     restart: always                  # コンテナが停止したときに自動的に再起動
@@ -25,7 +26,7 @@ services:
     command: --default-authentication-plugin=caching_sha2_password # MySQL8.0からのデフォルト認証プラグインを指定
     volumes:
       - db_data:/var/lib/mysql
-      - ./sql:/docker-entrypoint-initdb.d  
+      - ./sql:/docker-entrypoint-initdb.d
     healthcheck:
       test: "psql -U postgres"
       interval: 5s
